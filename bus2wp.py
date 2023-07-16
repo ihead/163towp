@@ -18,7 +18,7 @@ import re, sys, getopt, datetime
 from xml.dom import minidom
 
 def usage():
-    print """
+    print("""
 Usage: bus2wp.py [options] inputFile outputFile
 
 -a --admin        Admin name. You should specify it if your post contains
@@ -56,7 +56,7 @@ examples:
 
     # specify comment id start from 917.
     python bus2wp.py -c 917 bus.xml wp.xml
-    """
+    """)
     sys.exit(0)
 
 VERSION = '0.12.1208'
@@ -68,11 +68,11 @@ def convert(inputFileName='bus.xml', outputFileName='wp.xml', order='asc'):
     """"""
     try:
         xmldoc = minidom.parse(inputFileName)
-    except Exception, e:
-        print 'Failed.'
-        print e
+    except Exception as e:
+        print('Failed.')
+        print(e)
         if '(invalid' and 'token):' in e.message.split():
-            print 'Please repair or delete invalid token like "& < >" there.'
+            print('Please repair or delete invalid token like "& < >" there.')
         sys.exit(1)
 
     bus = xmldoc.documentElement
@@ -100,7 +100,7 @@ def convert(inputFileName='bus.xml', outputFileName='wp.xml', order='asc'):
     # channel directly in order to sort them lately according to order.
     item_list = [] if order == 'desc' else None
 
-    print
+    print()
 
     idx = 0
     for log in logs:
@@ -112,7 +112,7 @@ def convert(inputFileName='bus.xml', outputFileName='wp.xml', order='asc'):
         excerpt_text = None
         # LogDate is a local time in blugbus
         logdate = log.getElementsByTagName('publishTime')[0]
-        pubdate = "%d" % (long(getElementData(logdate)) / 1000) # local time
+        pubdate = "%d" % (int(getElementData(logdate)) / 1000) # local time
         writer = log.getElementsByTagName('userName')[0]
         creator = getElementData(writer)
         # blogbus supports only one category per post
@@ -308,7 +308,7 @@ def createCommentElement(dom, email, homepage, name, content, date,
         ip=None, admin_reply=None, comment_parent='0'):
     """"""
     # prepare comment data
-    comment_id = str(commentID.next())
+    comment_id = str(next(commentID))
     comment_author = getElementData(name)
     comment_author_email = getElementData(email)
     comment_author_url = getElementData(homepage)
@@ -476,7 +476,7 @@ def makeIndent(dom, node, indent=0):
 def writeDomToFile(dom, filename):
     domcopy = dom.cloneNode(True)
     makeIndent(domcopy, domcopy.documentElement)
-    f = file(filename, 'wb')
+    f = open(filename, 'wb')
     import codecs
     writer = codecs.lookup('utf-8')[3](f)
     domcopy.writexml(writer, encoding='utf-8')
@@ -493,9 +493,9 @@ def main(argv=None):
         opts, args = getopt.getopt(sys.argv[1:], "a:e:t:o:c:hv",
             ["admin=", "email=", "order=", "timediff=",
              "commentid=", "help", "version"])
-    except getopt.error, msg:
-        print msg
-        print "for help use --help"
+    except getopt.error as msg:
+        print(msg)
+        print("for help use --help")
         sys.exit(2)
 
     # process options
@@ -510,7 +510,7 @@ def main(argv=None):
             h = int(td[0])
             m = int(td[1]) if len(td) == 2 else 0
             if h > 14 or h < -12 or m not in (0, 30, 45):
-                print 'Time diff "%s" is not corrent.' % a
+                print('Time diff "%s" is not corrent.' % a)
                 sys.exit(2)
             TIME_DIFF = a
         elif o in ("-o", "--order"):
@@ -520,24 +520,24 @@ def main(argv=None):
                 usage()
         elif o in ("-c", "--commentid"):
             if a.isdigit():
-                commentID.next()
+                next(commentID)
                 commentID.send(int(a)-1)
             else:
-                print 'Comment id should be integer.'
+                print('Comment id should be integer.')
                 sys.exit(2)
         elif o in ("-h", "--help"):
             usage()
         elif o in ("-v", "--version"):
-            print VERSION
+            print(VERSION)
             sys.exit(0)
     # process arguments
     if (len(args) == 2):
-        print 'Converting...',
+        print('Converting...', end=' ')
         start = datetime.datetime.now()
         convert(args[0], args[1], order)
         end = datetime.datetime.now()
-        print
-        print 'Done. Elapse %d seconds.' % (end - start).seconds
+        print()
+        print('Done. Elapse %d seconds.' % (end - start).seconds)
     else:
         usage()
 
